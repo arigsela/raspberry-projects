@@ -62,7 +62,7 @@ def handle_button_event(event, button_num, led_line):
     global press_count, led_state
     
     # Get event details
-    timestamp = format_timestamp(event.timestamp)
+    timestamp = format_timestamp(event.timestamp_ns)
     
     if event.type == RISING_EDGE:
         # Button released (due to pull-up)
