@@ -73,13 +73,13 @@ def handle_button_event(event, button_num, led_line):
     else:
         timestamp = "unknown"
     
-    print(f"[DEBUG] Event type: {event.type}, RISING_EDGE={RISING_EDGE}, FALLING_EDGE={FALLING_EDGE}")
+    print(f"[DEBUG] Event type: {event.type}, event.RISING_EDGE={event.RISING_EDGE}, event.FALLING_EDGE={event.FALLING_EDGE}")
     
-    if event.type == RISING_EDGE:
+    if event.type == event.RISING_EDGE:
         # Button released (due to pull-up)
         print(f"[{timestamp}] Button {button_num} released")
         
-    elif event.type == FALLING_EDGE:
+    elif event.type == event.FALLING_EDGE:
         # Button pressed
         press_count += 1
         print(f"[{timestamp}] Button {button_num} pressed! (Total: {press_count})")
