@@ -84,9 +84,9 @@ def handle_button_event(event, button_num, led_line):
         press_count += 1
         print(f"[{timestamp}] Button {button_num} pressed! (Total: {press_count})")
         
-        # Toggle LED
+        # Toggle LED only on button press (falling edge)
         led_state = not led_state
-        print(f"[DEBUG] Toggling LED: led_state={led_state}")
+        print(f"[DEBUG] Button {button_num} toggling LED: led_state={led_state}")
         try:
             led_line.set_value(1 if led_state else 0)
             print(f"LED: {'ON' if led_state else 'OFF'} (GPIO{LED_PIN} set to {1 if led_state else 0})")
