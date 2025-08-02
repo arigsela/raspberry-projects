@@ -75,8 +75,11 @@ def handle_button_event(event, button_num, led_line):
         
         # Toggle LED
         led_state = not led_state
-        led_line.set_value(1 if led_state else 0)
-        print(f"LED: {'ON' if led_state else 'OFF'}")
+        try:
+            led_line.set_value(1 if led_state else 0)
+            print(f"LED: {'ON' if led_state else 'OFF'} (GPIO{LED_PIN} set to {1 if led_state else 0})")
+        except Exception as e:
+            print(f"ERROR setting LED value: {e}")
 
 def main():
     """Main program function"""
@@ -105,9 +108,22 @@ def main():
     
     # Configure LED as output
     try:
+        print(f"\n[DEBUG] Configuring LED on GPIO{LED_PIN} as output...")
         led_line.request(consumer="gpio-interrupts",
                         type=gpiod.LINE_REQ_DIR_OUT,
                         default_vals=[0])
+        print(f"[DEBUG] LED configured successfully")
+        
+        # Test LED by blinking it
+        print("[DEBUG] Testing LED - blinking 3 times...")
+        for i in range(3):
+            led_line.set_value(1)
+            print(f"  Blink {i+1}: ON")
+            time.sleep(0.5)
+            led_line.set_value(0)
+            print(f"  Blink {i+1}: OFF")
+            time.sleep(0.5)
+        print("[DEBUG] LED test complete\n")
     except Exception as e:
         print(f"Failed to configure LED: {e}")
         chip.close()
@@ -116,13 +132,27 @@ def main():
     # Configure buttons for event detection
     # We request both edges to see press and release
     try:
+        print(f"[DEBUG] Configuring button 1 on GPIO{BUTTON1_PIN}...")
         button1_line.request(consumer="gpio-interrupts",
                            type=gpiod.LINE_REQ_EV_BOTH_EDGES,
                            flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP)
         
+        print(f"[DEBUG] Configuring button 2 on GPIO{BUTTON2_PIN}...")
         button2_line.request(consumer="gpio-interrupts",
                            type=gpiod.LINE_REQ_EV_BOTH_EDGES,
                            flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP)
+        print("[DEBUG] Buttons configured successfully")
+        
+        # Read initial button states
+        print("[DEBUG] Initial button states:")
+        try:
+            button1_state = button1_line.get_value()
+            button2_state = button2_line.get_value()
+            print(f"  Button 1 (GPIO{BUTTON1_PIN}): {button1_state} ({'HIGH/Released' if button1_state else 'LOW/Pressed'})")
+            print(f"  Button 2 (GPIO{BUTTON2_PIN}): {button2_state} ({'HIGH/Released' if button2_state else 'LOW/Pressed'})")
+        except Exception as e:
+            print(f"  WARNING: Could not read button states: {e}")
+        
     except Exception as e:
         print(f"Failed to configure buttons: {e}")
         led_line.release()
@@ -142,22 +172,38 @@ def main():
     button2_fd = button2_line.event_get_fd()
     
     # Main event loop
+    loop_count = 0
     while running:
         # Use select to wait for events on either button
         # Timeout of 0.1s allows checking the running flag
         readable, _, _ = select.select([button1_fd, button2_fd], [], [], 0.1)
         
+        # Debug output every 50 loops (5 seconds) to show we're alive
+        loop_count += 1
+        if loop_count % 50 == 0:
+            try:
+                current_led_state = led_line.get_value()
+                print(f"[DEBUG] Loop {loop_count}: LED state = {current_led_state}, Program running...")
+            except Exception as e:
+                print(f"[DEBUG] Loop {loop_count}: Could not read LED state: {e}")
+        
         # Check for button 1 events
         if button1_fd in readable:
+            print(f"[DEBUG] Event detected on button 1 (GPIO{BUTTON1_PIN})")
             event = button1_line.event_read()
             if event:
                 handle_button_event(event, 1, led_line)
+            else:
+                print("[DEBUG] No event data received for button 1")
         
         # Check for button 2 events
         if button2_fd in readable:
+            print(f"[DEBUG] Event detected on button 2 (GPIO{BUTTON2_PIN})")
             event = button2_line.event_read()
             if event:
                 handle_button_event(event, 2, led_line)
+            else:
+                print("[DEBUG] No event data received for button 2")
     
     # Cleanup
     print(f"\nTotal button presses: {press_count}")
