@@ -62,16 +62,18 @@ def handle_button_event(event, button_num, led_line):
     global press_count, led_state
     
     # Get event details - handle different timestamp attribute formats
-    if hasattr(event, 'timestamp_ns'):
-        timestamp = format_timestamp(event.timestamp_ns)
-    elif hasattr(event, 'timestamp'):
-        timestamp = format_timestamp(event.timestamp)
-    elif hasattr(event, 'sec') and hasattr(event, 'nsec'):
+    if hasattr(event, 'sec') and hasattr(event, 'nsec'):
         # gpiod.LineEvent uses sec/nsec format
         timestamp_ns = event.sec * 1_000_000_000 + event.nsec
         timestamp = format_timestamp(timestamp_ns)
+    elif hasattr(event, 'timestamp_ns'):
+        timestamp = format_timestamp(event.timestamp_ns)
+    elif hasattr(event, 'timestamp'):
+        timestamp = format_timestamp(event.timestamp)
     else:
         timestamp = "unknown"
+    
+    print(f"[DEBUG] Event type: {event.type}, RISING_EDGE={RISING_EDGE}, FALLING_EDGE={FALLING_EDGE}")
     
     if event.type == RISING_EDGE:
         # Button released (due to pull-up)
@@ -84,11 +86,14 @@ def handle_button_event(event, button_num, led_line):
         
         # Toggle LED
         led_state = not led_state
+        print(f"[DEBUG] Toggling LED: led_state={led_state}")
         try:
             led_line.set_value(1 if led_state else 0)
             print(f"LED: {'ON' if led_state else 'OFF'} (GPIO{LED_PIN} set to {1 if led_state else 0})")
         except Exception as e:
             print(f"ERROR setting LED value: {e}")
+    else:
+        print(f"[DEBUG] Unexpected event type: {event.type}")
 
 def main():
     """Main program function"""
