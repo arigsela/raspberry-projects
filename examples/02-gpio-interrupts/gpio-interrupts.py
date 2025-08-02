@@ -69,11 +69,14 @@ def handle_button_event(event, button_num, led_line):
     # Try different timestamp attribute names
     timestamp = None
     if hasattr(event, 'timestamp_ns'):
+        print(f"[DEBUG] Using timestamp_ns: {event.timestamp_ns}")
         timestamp = format_timestamp(event.timestamp_ns)
     elif hasattr(event, 'timestamp'):
+        print(f"[DEBUG] Using timestamp: {event.timestamp}")
         timestamp = format_timestamp(event.timestamp)
     elif hasattr(event, 'sec') and hasattr(event, 'nsec'):
         # Some versions use sec/nsec format
+        print(f"[DEBUG] Using sec/nsec: sec={event.sec}, nsec={event.nsec}")
         timestamp_ns = event.sec * 1_000_000_000 + event.nsec
         timestamp = format_timestamp(timestamp_ns)
     else:
