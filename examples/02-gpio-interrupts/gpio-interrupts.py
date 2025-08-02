@@ -61,27 +61,17 @@ def handle_button_event(event, button_num, led_line):
     """Process button events and control LED"""
     global press_count, led_state
     
-    # Debug: Print event object attributes
-    print(f"[DEBUG] Event object type: {type(event)}")
-    print(f"[DEBUG] Event object attributes: {dir(event)}")
-    
-    # Get event details
-    # Try different timestamp attribute names
-    timestamp = None
+    # Get event details - handle different timestamp attribute formats
     if hasattr(event, 'timestamp_ns'):
-        print(f"[DEBUG] Using timestamp_ns: {event.timestamp_ns}")
         timestamp = format_timestamp(event.timestamp_ns)
     elif hasattr(event, 'timestamp'):
-        print(f"[DEBUG] Using timestamp: {event.timestamp}")
         timestamp = format_timestamp(event.timestamp)
     elif hasattr(event, 'sec') and hasattr(event, 'nsec'):
-        # Some versions use sec/nsec format
-        print(f"[DEBUG] Using sec/nsec: sec={event.sec}, nsec={event.nsec}")
+        # gpiod.LineEvent uses sec/nsec format
         timestamp_ns = event.sec * 1_000_000_000 + event.nsec
         timestamp = format_timestamp(timestamp_ns)
     else:
         timestamp = "unknown"
-        print(f"[DEBUG] No timestamp attribute found")
     
     if event.type == RISING_EDGE:
         # Button released (due to pull-up)
