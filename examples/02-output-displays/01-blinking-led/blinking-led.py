@@ -32,11 +32,11 @@ def main():
     while True:
         led.on()
         print("LED ON")
-        sleep(0.5)
+        sleep(1)
         
         led.off()
         print("LED OFF")
-        sleep(0.5)
+        sleep(1)
 
 if __name__ == "__main__":
     main()
