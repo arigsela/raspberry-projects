@@ -73,6 +73,19 @@ button_line.request(consumer="gpio-interrupts",
                    flags=gpiod.LINE_REQ_FLAG_BIAS_PULL_UP)
 ```
 
+### Edge Type Constants
+```python
+# Use gpiod library constants for line request configuration
+RISING_EDGE = gpiod.LINE_REQ_EV_RISING_EDGE   # For line.request()
+FALLING_EDGE = gpiod.LINE_REQ_EV_FALLING_EDGE # For line.request()
+
+# But use event object constants for event type comparison
+if event.type == event.RISING_EDGE:    # Event object constants (different values!)
+    # Handle button release
+elif event.type == event.FALLING_EDGE: # Event object constants
+    # Handle button press
+```
+
 ### Event Waiting with select()
 ```python
 # Wait for events on multiple file descriptors
@@ -83,7 +96,11 @@ readable, _, _ = select.select([button1_fd, button2_fd], [], [], 0.1)
 ```python
 # Read event with timestamp
 event = button_line.event_read()
-timestamp = event.timestamp  # Hardware timestamp in nanoseconds
+# Handle different timestamp formats across gpiod versions
+if hasattr(event, 'sec') and hasattr(event, 'nsec'):
+    timestamp_ns = event.sec * 1_000_000_000 + event.nsec
+elif hasattr(event, 'timestamp_ns'):
+    timestamp_ns = event.timestamp_ns
 ```
 
 ## Advanced Concepts Demonstrated
@@ -115,6 +132,11 @@ Ideas for enhancement:
 - **No events detected**: Check wiring and pull-up configuration
 - **Multiple events per press**: Add software debouncing
 - **High CPU usage**: Ensure using event wait, not busy polling
+- **AttributeError on timestamp**: gpiod.LineEvent uses `sec`/`nsec` attributes, not `timestamp`
+- **Event type mismatch**: The gpiod library has two different sets of constants:
+  - `gpiod.LINE_REQ_EV_*` constants for configuring line requests
+  - `event.RISING_EDGE`/`event.FALLING_EDGE` constants for comparing event types
+- **Wrong edge constants**: Don't use undefined constants like `gpiod.RISING_EDGE` - use the proper `gpiod.LINE_REQ_EV_*` constants
 
 ## Next Steps
 
