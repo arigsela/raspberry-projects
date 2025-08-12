@@ -49,7 +49,7 @@ def main():
         for color_name, (r, g, b) in colors.items():
             print(f"Color: {color_name}")
             led.color = (r, g, b)
-            sleep(1)
+            sleep(2)
         
         # Smooth color transitions
         print("\nSmooth color transitions...")
@@ -75,7 +75,7 @@ def main():
         # Rainbow effect
         print("\nRainbow effect...")
         led.pulse(fade_in_time=1, fade_out_time=1, n=2)
-        sleep(1)
+        sleep(2)
 
 if __name__ == "__main__":
     main()
